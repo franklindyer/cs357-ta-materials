@@ -16,7 +16,7 @@ On the command line, you can run Racket with the command `racket`. Once you are 
 > (display "Hello World!\n")
 Hello World!
 ```
-You can load a Racket file from the same directory where you ran `racket` using the command `,enter`. For instance, if you launch Racket in this directory, you should be able to carry out the following:
+You can load a Racket file from the same directory where you ran `racket` using the command `,enter` or `enter!`. For instance, if you launch Racket in this directory, you should be able to carry out the following:
 ```
 > ,enter "hello.rkt"
 Hello World!
