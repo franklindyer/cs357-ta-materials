@@ -39,7 +39,7 @@
 		((ifp test x y)
 		 (let* ((ch (make-channel))
 		        (th1 (thread (lambda () (if (eqv? x y) (channel-put ch x) 0))))
-			(th2 (thread (lambda () (if test x y)))))
+			(th2 (thread (lambda () (channel-put ch (if test x y))))))
 		       (channel-get ch)))))
 
 (define (comp-list-p l1 l2)
