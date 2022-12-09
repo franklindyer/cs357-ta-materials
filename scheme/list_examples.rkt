@@ -24,3 +24,16 @@
 	     	 (last2 tl)
 		 hd)))
 
+(define (len ls)
+	(if (null? ls)
+	    0
+	    (+ 1 (len (cdr ls)))))
+
+(define (len-tail ls)
+	(letrec ((len-tail-cum
+	         (lambda (n ls2) (
+		 	 if (null? ls2)
+			    n
+			    (len-tail-cum (+ 1 n) (cdr ls2))
+		 ))))
+	     (len-tail-cum 0 ls)))
