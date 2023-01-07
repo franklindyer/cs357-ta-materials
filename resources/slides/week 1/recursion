@@ -1,0 +1,44 @@
+(define fact
+  (lambda (x)
+    (if (= x 0)
+	1
+	(* x (fact (- x 1))))))
+
+(define list?
+  (lambda (sexpr)
+    (or (null? sexpr)
+	(and (pair? sexpr)
+	     (list? (cdr sexpr))))))
+
+(define length
+  (lambda (ls)
+    (if (null? ls)
+	0
+	(+ 1 (length (cdr ls))))))
+
+(define member?
+  (lambda (item ls)
+    (if (null? ls)
+	#f
+	(or (eq? (car ls) item)
+	    (member? item (cdr ls))))))
+
+(define delete
+  (lambda (item ls)
+    (cond ((null? ls) '())
+	  ((eq? (car ls) item)
+	   (delete item (cdr ls)))
+	  (else
+	   (cons (car ls)
+		 (delete item (cdr ls)))))))
+
+(define swap
+  (lambda (item1 item2 ls)
+    (cond ((null? ls) '())
+	  ((eq? (car ls) item1)
+	   (cons item2 (swap item1 item2 (cdr ls))))
+	  ((eq? (car ls) item2)
+	   (cons item1 (swap item1 item2 (cdr ls))))
+	  (else
+	   (cons (car ls)
+		 (swap item1 item2 (cdr ls)))))))

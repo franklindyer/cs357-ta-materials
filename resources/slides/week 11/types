@@ -1,0 +1,61 @@
+--data Entity = Human String String String Int | Dog String Int deriving (Show, Eq)
+
+-- using record syntax
+data Entity = Human {title :: String, firstName :: String, lastName :: String, age :: Int} | Dog {firstName :: String, age :: Int} deriving (Show, Eq)
+
+bill = Human "Mr." "Bill" "Foobar" 25
+fido = Dog "Fido" 4
+
+greet' foo@(Human _ _ _ _) = "Hello " ++ (title foo) ++ " " ++ (lastName foo)
+greet' foo@(Dog _ _) = (firstName foo) ++ "! Come here!"
+
+-- pattern matching using type constructors
+greet (Human title _ surname _) = "Hello " ++ title ++ " " ++ surname
+greet (Dog name _) = name ++ "! Come here!"
+
+data Coin = Penny | Nickel | Dime | Quarter | Half | Dollar deriving (Show, Eq)
+
+value :: (Num a) => Coin -> a
+value Penny = 1
+value Nickel = 5
+value Dime = 10
+value Quarter = 25
+value Half = 50
+value Dollar = 100
+
+total :: (Num a) => [Coin] -> a
+total coins = sum $ map value coins
+
+powerset [] = [[]]
+powerset (x:xs) = half ++ (map (x:) half) where half = powerset xs
+
+makeChange amount coins = head $ filter (\x -> total x == amount) (powerset coins)
+
+makeChange' amount coins = head $ filter ((== amount) . total) (powerset coins)
+
+-- point free
+makeChange'' amount = head . filter ((== amount) . total) . powerset
+
+-- algebraic datatype
+data List a = Null | Cons a (List a) deriving (Show, Eq)
+
+car (Cons x _) = x
+
+cdr (Cons _ y) = y
+
+append xs ys = if (xs == Null) then ys else Cons (car xs) (append (cdr xs) ys)
+
+append' Null ys = ys
+append' (Cons x xs) ys = Cons x (append' xs ys)
+
+reverse' :: List a -> List a
+reverse' Null = Null
+reverse' (Cons x xs) = (append' (reverse' xs) (Cons x Null))
+
+haskell2scheme :: [a] -> List a
+haskell2scheme [] = Null
+haskell2scheme (x:xs) = Cons x (haskell2scheme xs)
+
+scheme2haskell :: List a -> [a]
+scheme2haskell Null = []
+scheme2haskell (Cons x xs) = x:(scheme2haskell xs)

@@ -1,0 +1,133 @@
+
+(define iota
+  (lambda (n)
+    (letrec
+      ((loop 
+        (lambda (m acc)
+          (if (= m 0)
+              acc
+              (loop (sub1 m) (cons m acc))))))
+      (loop n ()))))
+
+(define fact
+  (lambda (n)
+    (apply * (iota n))))
+
+;; e = 1/0! + 1/1! + 1/2! + 1/3! + 1/4! ...
+(define e (apply + (map / (map fact (map sub1 (iota 10))))))
+
+;; (perms-starting-with 'a '(a b c)) => '((a b c) (a c b))
+(define perms-starting-with
+  (lambda (item ls)
+    (map (lambda (perm) (cons item perm))
+         (permutations (delete item ls)))))
+
+;; (permutations '(a b c)) => ((a b c) (a c b) (b a c) (b c a) (c a b) (c b a))
+(define permutations
+  (lambda (ls)
+    (if (null? ls)
+        '(())
+        (apply
+	 append
+	 (map (lambda (item) (perms-starting-with item ls)) ls)))))
+
+;; (powerset '(a b c)) => ((a b c) (a b) (a c) (a) (b c) (b) (c) ())
+(define powerset
+   (lambda (ls)
+    (if (null? ls)
+        '(())
+        (append (map (lambda (set) (cons (car ls) set)) (powerset (cdr ls)))
+                (powerset (cdr ls))))))
+
+;; better
+(define powerset
+  (lambda (ls)
+    (if (null? ls)
+        '(())
+        (let ((half (powerset (cdr ls))))
+          (append (map (lambda (set) (cons (car ls) set)) half)
+                  half)))))
+
+;; (make-row * 2 '(1 2 3)) => (2 4 6)
+(define make-row
+  (lambda (proc x ys)
+    (map (lambda (y) (proc x y)) ys)))
+
+;; (outer-product * (iota 3) (iota 3)) => ((1 2 3) (2 4 6) (3 6 9))
+(define outer-product
+  (lambda (proc xs ys)
+    (map (lambda (x) (make-row proc x ys)) xs)))
+
+;; (select even? '(0 1 2) '(a b c)) => (a c)
+(define select
+  (lambda (pred ls0 ls1)
+    (cond ((null? ls0) '())
+          ((pred (car ls0))
+           (cons (car ls1) (select pred (cdr ls0) (cdr ls1))))
+          (else
+           (select pred (cdr ls0) (cdr ls1))))))
+
+;; (tally even? '(1 2 3 4)) => 2
+(define tally
+  (lambda (pred)
+    (lambda (ls)
+      (cond ((null? ls) 0)
+            ((pred (car ls))
+             (add1 ((tally pred) (cdr ls))))
+            (else
+             ((tally pred) (cdr ls)))))))
+
+(define fold
+  (lambda (proc seed ls)
+    (if (null? ls)
+	seed
+	(proc (car ls)
+	      (fold proc seed (cdr ls))))))
+;; better
+(define tally
+  (lambda (pred)
+    (lambda (ls)
+      (fold (lambda (x y) (if (pred x) (add1 y) y)) 0 ls))))
+
+;; (primes 20) => (2 3 5 7 11 13 17 19)
+(define primes
+  (lambda (n)
+    (let ((ls (iota n)))
+      (select
+       (lambda (x) (= x 2))
+       (map (tally zero?) (outer-product remainder ls ls))
+       ls))))
+
+;; (goldbach 98) => ((19 79) (31 67) (37 61) (61 37) (67 31) (79 19))
+(define goldbach
+  (lambda (n)
+    (let ((primes (primes n)))
+      (apply append
+        (apply append
+          (outer-product
+           (lambda (x y) (if (= n (+ x y)) (list (list x y)) '()))
+           primes
+           primes))))))
+
+;; (identity 3) => ((1 0 0) (0 1 0) (0 0 1))
+(define identity
+  (lambda (n)
+    (let ((ls (iota n)))
+      (outer-product
+       (lambda (x y) (if (= x y) 1 0))
+       ls
+       ls))))
+
+;; (transpose '((1 2 3) (4 5 6) (7 8 9)) => ((1 4 7) (2 5 8) (3 6 9))
+(define transpose
+  (lambda (A)
+    (apply map list A)))
+
+(define inner-product
+  (lambda (u v)
+    (apply + (map * u v))))
+
+;; (matrix-product '((1 1) (1 -1)) '((1 2) (3 4))) => ((4 6) (-2 -2))
+ (define matrix-product
+  (lambda (A B)
+    (outer-product inner-product A (transpose B))))

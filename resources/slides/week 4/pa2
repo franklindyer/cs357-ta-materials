@@ -1,0 +1,172 @@
+
+;; (reverse '(1 2 3)) => (3 2 1)
+;; (reverse '(1 (2 3) 4)) => (4 (2 3) 1)
+(define reverse
+  (lambda (ls)
+    (if (null? ls)
+        '()
+        (append (reverse (cdr ls))
+                (list (car ls))))))
+
+;; (reverse-all '(1 2 3)) => (3 2 1)
+;; (reverse-all '(1 (2 3) 4)) => (4 (3 2) 1)
+(define reverse-all
+  (lambda (ls)
+    (cond ((null? ls) '())
+          ((pair? (car ls))
+           (append (reverse-all (cdr ls))
+                   (list (reverse-all (car ls)))))
+          (else
+           (append (reverse-all (cdr ls))
+                   (list (car ls)))))))
+
+;; (wrap 1) => (1)
+;; (wrap '(1)) => (1)
+(define wrap
+  (lambda (x)
+    (if (pair? x)
+        x
+        (list x))))
+
+;; (flatten '(1 (2 3) (4) 5)) => '(1 2 3 4 5)
+;; (flatten '(1 ((((2 3)))) (4) 5)) => '(1 (((2 3))) 4 5)
+(define flatten
+  (lambda (ls)
+    (if (null? ls)
+        '()
+        (append (wrap (car ls))
+                (flatten (cdr ls))))))
+
+(define flatten
+  (lambda (ls)
+    (apply append (map wrap ls))))
+
+;; (flatten-all '(1 ((((2 3)))) (4) 5)) => '(1 2 3 4 5)
+(define flatten-all
+  (lambda (ls)
+    (cond ((null? ls) '())
+          ((pair? (car ls))
+           (append (flatten-all (car ls))
+                   (flatten-all (cdr ls))))
+          (else
+           (cons (car ls)
+                 (flatten-all (cdr ls)))))))
+
+;; (reverse-all '(1 ((2 3)) (4 5))) =>
+;; (map reverse-all '(1 ((2 3)) (4 5))) => (1 ((3 2)) (5 4))
+(define reverse-all
+  (lambda (ls)
+    (if (pair? ls)
+        (reverse (map reverse-all ls))
+        ls)))
+
+(define flatten-all
+  (lambda (ls)
+    (if (pair? ls)
+        (flatten (map flatten-all ls))
+        ls)))
+
+;; pattern abstracted as "make-deep"
+(define make-deep
+  (lambda (proc)
+    (letrec
+      ((pattern
+        (lambda (ls)
+          (if (pair? ls)
+              (proc (map pattern ls))
+              ls))))
+      pattern)))
+
+;; alternative
+(define make-deep
+  (lambda (proc)
+    (lambda (ls)
+      (if (pair? ls)
+          (proc (map (make-deep proc) ls))
+          ls))))
+
+(define reverse-all
+  (make-deep reverse))
+
+(define flatten-all
+  (make-deep flatten))
+
+;; (scramble '(a b c)) => (b a c)
+;; (scramble '(1 + 3)) => (+ 1 3)
+(define scramble
+  (lambda (ls)
+    (list (cadr ls)
+          (car ls)
+          (caddr ls))))
+
+;; pattern applied in new context
+(define infix->prefix
+  (make-deep scramble))
+
+;; prefix calculator
+(define calculator
+  (make-deep
+   (lambda (ls)
+     (let ((op (car ls)))
+       (apply
+        (cond ((eq? op '+) +)
+              ((eq? op '-) -)
+              ((eq? op '*) *)
+              (else /))
+        (cdr ls))))))
+
+;; infix calculator
+(define calculator
+  (make-deep
+   (lambda (ls)
+     (let ((op (cadr ls)))
+       ((cond ((eq? op '+) +)
+              ((eq? op '-) -)
+              ((eq? op '*) *)
+              (else /))
+        (car ls)
+	(caddr ls))))))
+
+(define iota
+  (lambda (n)
+    (letrec
+      ((loop
+        (lambda (n acc)
+          (if (= n 0)
+              acc
+              (loop (- n 1) (cons n acc))))))
+      (loop n '()))))
+
+(define fact (lambda (n) (apply * (iota n))))
+
+;; e = 1/0! + 1/2! + 1/3! + 1/4! + ... 
+(define e (apply + (map / (map fact (map sub1 (iota 11))))))
+
+;; better
+(define e (apply + (map (compose / fact sub1) (iota 20))))
+
+(define compose2
+  (lambda (f g)
+    (lambda (x)
+      (f (g x)))))
+
+(define compose
+  (lambda args
+    (if (null? args)
+        (lambda (x) x)
+        (compose2
+         (car args)
+         (apply compose (cdr args))))))
+
+(define fold
+  (lambda (proc seed)
+    (lambda (ls)
+      (if (null? ls)
+	  seed
+	  (proc (car ls)
+		((fold proc seed) (cdr ls)))))))
+
+;; using fold
+(define compose
+  (lambda args
+    ((fold compose2 (lambda (x) x)) args)))

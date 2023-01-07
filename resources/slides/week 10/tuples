@@ -1,0 +1,69 @@
+init' [x] = []
+init' (x:xs) = x:(init' xs)
+
+last' [x] = x
+last' (_:xs) = last' xs
+
+reverse' [] = []
+reverse' (x:xs) = (reverse' xs) ++ [x]
+
+take' 0 xs = []
+take' n (x:xs) = x:(take' (n-1) xs)
+
+repeat' x = x:(repeat' x)
+
+-- laziness!!
+replicate' n x = take n (repeat' x)
+
+-- don't try this in Scheme!!
+ifThenElse x y z = if x then y else z
+
+fact n = ifThenElse (n == 0) 1 (n*fact(n-1))
+
+drop' 0 xs = xs
+drop' n (x:xs) = drop (n-1) xs
+
+product' [] = 1
+product' (x:xs) = x*(product' xs)
+
+cycle' xs = xs ++ (cycle' xs)
+
+ -- tuples
+fst (x, _) = x
+
+snd (_, y) = y
+
+zip' [] _ = []
+zip' (x:xs) (y:ys) = (x,y):(zip' xs ys)
+
+-- curried tail fact
+fact :: (Num t) => t -> t -> t
+fact 0 acc = acc
+fact x acc = fact (x-1) (x*acc)
+
+-- uncurried tail fact
+fact' :: (Num t) => (t, t) -> t
+fact' (0, acc) = acc
+fact' (x, acc) = fact' (x-1, x*acc)
+
+-- uncurry is like apply
+fact' (x, acc) = (uncurry fact) (x, acc)
+
+-- point free
+fact' = uncurry fact
+
+-- curry is like the opposite of apply
+fact x acc = (curry fact') x acc
+
+-- point free
+fact = curry fact'
+
+-- multiple return values
+funny (x, acc) = (x+1, x*acc)
+
+church _ 0 = id
+church f n = f . (church f (n-1))
+
+xs !! n = head $ (church tail n)
+
+funnyFact n = snd $ (church funny n) (1,1)

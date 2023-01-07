@@ -1,0 +1,73 @@
+data Btree a = Leaf a | Fork (Btree a) (Btree a) deriving (Show, Eq)
+
+foo = Fork (Fork (Fork (Fork (Leaf 'a') (Leaf 'b')) (Leaf 'c')) (Leaf 'd')) (Leaf 'e')
+
+size :: Btree a -> Int
+size (Leaf x) = 1
+size (Fork xt yt) = size xt + size yt
+
+height :: Btree a -> Int
+height (Leaf x) = 0
+height (Fork xt yt) = 1 + (height xt) `max` (height yt)
+
+flatten :: Btree a -> [a]
+flatten (Leaf x) = [x]
+flatten (Fork xt yt) = flatten xt ++ flatten yt
+
+makeBtree :: [a] -> Btree a
+makeBtree [x] = (Leaf x)
+makeBtree xs = Fork (makeBtree (take m xs)) (makeBtree (drop m xs))
+    where m = (length xs) `div` 2
+
+bar = makeBtree [1..4]
+
+mapBtree :: (a -> b) -> Btree a -> Btree b
+mapBtree f (Leaf x) = Leaf (f x)
+mapBtree f (Fork xt yt) = Fork (mapBtree f xt) (mapBtree f yt)
+
+const' k = \x -> k
+
+foldBtree :: (a -> b) -> (b -> b -> b) -> Btree a -> b
+foldBtree f _ (Leaf x) = f x
+foldBtree f g (Fork xt yt) = g (foldBtree f g xt) (foldBtree f g yt)
+
+size' = foldBtree (const 1) (+)
+height' = foldBtree (const 1) (\x y -> (x `max` y) + 1)
+
+f # g = \x y -> f (g x y)
+
+height'' = foldBtree (const 1) (succ # max)
+
+flatten' = foldBtree (\x -> [x]) (++)
+
+flatten'' = foldBtree (: []) (++)
+
+mapBtree' f = foldBtree (\x -> (Leaf (f x))) Fork
+
+mapBtree'' f = foldBtree (Leaf . f) Fork
+
+data RoseTree a = Node a [RoseTree a] deriving (Show,Eq)
+
+x = Node 5 [Node 1 [], Node 2 [Node 3 [], Node 4 [Node 5 []]]]
+
+fringe (Node x []) = [x]
+fringe (Node _ xs) = concat $ map fringe xs
+
+flattenRoseTree (Node x []) = [x]
+flattenRoseTree (Node x xs) = x:(concat $ map flattenRoseTree xs)
+
+sumRoseTree (Node x []) = x
+sumRoseTree (Node x xs) = x + (sum $ map sumRoseTree xs)
+
+foldRoseTree f g (Node x []) = f x
+foldRoseTree f g (Node x xs) = g x (map (foldRoseTree f g) xs)
+
+flattenRoseTree' = foldRoseTree (:[]) (\x xs -> x : (concat xs))
+
+fringe' = foldRoseTree (:[]) (\_ xs -> concat xs)
+
+sumRoseTree' = foldRoseTree id (\x xs -> x + (sum xs))
+
+mapRoseTree' f = foldRoseTree (\x -> Node (f x) []) (\x xs -> Node (f x) xs)
+
+mapRoseTree'' f = foldRoseTree ((`Node` []) . f) (\x xs -> Node (f x) xs)

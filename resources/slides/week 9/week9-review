@@ -1,0 +1,85 @@
+(define longer
+  (lambda (ls1 ls2)
+    (if (> (length ls1) (length ls2))
+           ls1
+           ls2)))
+
+(define longest
+  (lambda args
+    (cond ((null? args) ())
+          ((null? (cdr args)) (car args))
+          (else
+            (longer (car args)
+                    (apply longest (cdr args)))))))
+
+;; Example 2
+(define either?
+  (lambda (x y) (or x y)))
+
+(define any?
+  (lambda args
+    (cond ((null? args) #f)
+          ((null? (cdr args)) (car args))
+          (else
+            (either? (car args)
+                     (apply any? (cdr args)))))))
+
+;; Example 3
+(define compose
+  (lambda (f g)
+    (lambda (x)
+      (f (g x)))))
+
+(define compose-many
+  (lambda args
+    (cond ((null? args) (lambda (x) x))
+          ((null? (cdr args)) (car args))
+          (else
+            (compose (car args)
+                     (apply compose-many (cdr args)))))))
+
+(define generalize
+  (lambda (proc2 id)
+    (lambda args
+      (cond ((null? args) id)
+            ((null? (cdr args)) (car args))
+            (else
+             (proc2 (car args)
+                    (apply (generalize proc2 id) (cdr args))))))))
+
+(define longest
+  (generalize longer '()))
+
+(define any?
+  (generalize either? #f))
+
+(define compose-many
+  (generalize compose (lambda (x) x)))
+
+(define generalize
+  (lambda (proc2 id)
+    (letrec
+      ((pattern
+        (lambda args
+          (cond ((null? args) id)
+                ((null? (cdr args)) (car args))
+                (else
+                 (proc2 (car args)
+                        (apply pattern (cdr args))))))))
+      pattern)))
+
+(define powerset
+  (lambda (ls)
+    (if (null? ls)
+        '(())
+        (let ((half (powerset (cdr ls))))
+          (append (map (lambda (x) (cons (car ls) x)) half)
+                  half)))))
+
+(define make-change
+  (lambda (amount coins)
+    (let ((ls (powerset coins)))
+      (car (select
+            (lambda (x) (= x amount))
+            (map (lambda (ls) (apply + ls)) ls)
+            ls)))))

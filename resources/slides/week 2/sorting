@@ -1,0 +1,79 @@
+(define even?
+  (lambda (x)
+    (if (zero? x)
+        #t
+        (odd? (- x 1)))))
+
+(define odd?
+  (lambda (x)
+    (if (zero? x)
+        #f
+        (even? (- x 1)))))
+
+(define deep-times
+  (lambda (ls)
+    (cond ((null? ls) 1)
+          ((pair? (car ls))
+           (* (deep-times (car ls))
+              (deep-times (cdr ls))))
+          (else
+           (* (car ls)
+              (deep-times (cdr ls)))))))
+
+(define deep-times
+  (lambda (sexpr)
+    (cond ((null? sexpr) 1)
+          ((pair? sexpr)
+           (* (deep-times (car sexpr))
+              (deep-times (cdr sexpr))))
+          (else
+           sexpr))))
+
+(define reverse
+  (lambda (ls)
+    (if (null? ls)
+        '()
+        (append (reverse (cdr ls))
+                (list (car ls))))))
+
+(define deep-reverse
+  (lambda (ls)
+    (cond ((null? ls) '())
+          ((pair? (car ls))
+           (append (deep-reverse (cdr ls))
+                   (list (deep-reverse (car ls)))))
+          (else
+           (append (deep-reverse (cdr ls))
+                   (list (car ls)))))))
+
+(define evens
+  (lambda (ls)
+    (if (null? ls)
+        '()
+        (cons (car ls)
+              (odds (cdr ls))))))
+
+(define odds
+  (lambda (ls)
+    (if (null? ls)
+        '()
+        (evens (cdr ls)))))
+
+(define merge
+  (lambda (ls0 ls1)
+    (cond ((null? ls0) ls1)
+          ((null? ls1) ls0)
+          ((> (car ls0) (car ls1))
+           (cons (car ls1)
+                 (merge ls0 (cdr ls1))))
+          (else
+           (cons (car ls0)
+                 (merge (cdr ls0) ls1))))))
+
+(define mergesort
+  (lambda (ls)
+    (cond ((null? ls) '())
+          ((null? (cdr ls)) ls)
+          (else
+           (merge (mergesort (evens ls))
+                  (mergesort (odds ls)))))))

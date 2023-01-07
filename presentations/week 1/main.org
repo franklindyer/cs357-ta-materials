@@ -1,0 +1,23 @@
+#+TITLE: Basic logistics and Setting up a working environment in Emacs
+#+AUTHOR: Jose Abel Castellanos Joo
+#+OPTIONS: toc:nil
+
+* TA logistics
+** Jose Info
+*** Office: Farris Building, Office 3155 on Floor 3
+*** Office hours: ?
+*** Zoom link: ?
+** Franklin Info
+* Homework logistics
+** Late submission policy
+- Homework should be delivered on time
+- Late submissions up to 2 days will receive a 10% penalty
+- Late submissions after 2 days will no be graded unless a prior justifiable reason is requested from the student
+** Feedback and grades
+- Homework submitted up to 2 days will be graded within 1 week
+- There is not grade ETA for homework submitted with a justifiable reason
+** TODO Homemork distribution
+** Homemork submission
+*** TODO Explain homework format, i.e. a single file containing implementation answer and non-implementation answer as comments.
+* Setting up a working environment in Emacs
+** TODO

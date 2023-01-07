@@ -1,0 +1,149 @@
+(define add1
+  (lambda (x) (+ x 1)))
+
+
+;; (add1-all '(1 2 3)) => (2 3 4)
+(define add1-all
+  (lambda (ls)
+    (if (null? ls)
+         '()
+        (cons (add1 (car ls))
+              (add1-all (cdr ls))))))
+
+(define wrap
+  (lambda (sexpr)
+    (if (pair? sexpr)
+        sexpr
+        (list sexpr))))
+
+;; (wrap-all '(1 (2) 3)) => ((1) (2) (3))
+(define wrap-all
+  (lambda (ls)
+    (if (null? ls)
+        '()
+        (cons (wrap (car ls))
+              (wrap-all (cdr ls))))))
+
+;; (evens? '(1 2 3)) => (#f #t #f)
+(define evens?
+  (lambda (ls)
+    (if (null? ls)
+        '()
+         (cons (even? (car ls))
+	       (evens? (cdr ls))))))
+
+;; add1-all, wrap-all, evens? pattern abstracted as "map"
+(define map
+  (lambda (proc ls)
+    (if (null? ls)
+        '()
+        (cons (proc (car ls))
+              (map proc (cdr ls))))))
+
+(define delete
+  (lambda (item ls)
+    (cond ((null? ls) '())
+          ((eq? item (car ls))
+           (cons item (delete item (cdr ls))))
+          (else
+           (delete item (cdr ls))))))
+
+(define length
+  (lambda (ls)
+    (if (null? ls)
+        0
+        (add1 (length (cdr ls))))))
+
+(define append
+  (lambda (ls0 ls1)
+    (if (null? ls0)
+        ls1
+         (cons (car ls0)
+	       (append (cdr ls0) ls1)))))
+
+;; use currying to make them look more alike
+(define map-c
+  (lambda (proc)
+    (lambda (ls)
+      (if (null? ls)
+          '()
+          (cons (proc (car ls))
+                ((map-c proc) (cdr ls)))))))
+
+(define delete-c
+  (lambda (item)
+    (lambda (ls)
+      (if (null? ls)
+          '()
+          (if (eq? item (car ls))
+              ((delete-c item) (cdr ls))
+              (cons (car ls) ((delete-c item) (cdr ls))))))))
+
+(define append-c
+  (lambda (ls1)
+    (lambda (ls0)
+      (if (null? ls0)
+          ls1
+          (cons (car ls0)
+                ((append-c ls1) (cdr ls0)))))))
+
+;; map-c, delete-c, length, append-c pattern abstracted as "fold"
+(define fold
+  (lambda (proc seed)
+    (lambda (ls)
+      (if (null? ls)
+          seed
+          (proc (car ls)
+                ((fold proc seed) (cdr ls)))))))
+
+(define length
+  (fold (lambda (x y) (+ 1 y)) 0))
+
+;; ((map-c add1) '(1 2 3)) => (2 3 4)
+(define map-c
+  (lambda (proc)
+    (fold (lambda (x y) (cons (proc x) y)) '())))
+
+(define map
+  (lambda (proc ls)
+    ((map-c proc) ls)))
+
+;; ((delete-c 'foo) '(foo bar foo)) => (bar)
+(define delete-c
+  (lambda (item)
+    (fold (lambda (x y) (if (eq? x item) y (cons x y))) '())))
+
+(define delete
+  (lambda (item ls)
+    ((delete-c item) ls)))
+
+;; ((append-c '(4 5 6)) '(1 2 3)) => '(1 2 3 4 5 6)
+(define append-c
+  (lambda (ls1)
+    (fold cons ls1)))
+
+(define append2
+  (lambda (ls0 ls1)
+    ((append-c ls1) ls0)))
+
+;; fold used to define other functions
+(define reverse
+  (fold (lambda (x y) (append2 (reverse y) (list x))) '()))
+
+(define filter
+  (lambda (pred ls)
+    ((fold (lambda (x y) (if (pred x) (cons x y) y)) '()) ls)))
+
+;; used to write variadic versions of max and append
+(define max2
+  (lambda (x y) (if (> x y) x y)))
+
+;; (max 1 2 3) => 3
+(define max
+   (lambda (x . args)
+    ((fold max2 x) args)))
+
+;; (append '(1 2) '(3 4) '(5 6)) => (1 2 3 4 5 6)
+(define append
+  (lambda args
+    ((fold append2 '()) args)))

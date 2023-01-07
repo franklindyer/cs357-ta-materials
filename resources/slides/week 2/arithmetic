@@ -1,0 +1,78 @@
+(define zilch '())
+
+(define zilch? null?)
+
+(define succ
+  (lambda (x)
+    (lambda () x)))
+
+(define pred
+  (lambda (x) (x)))
+
+(define number->nat
+  (lambda (k)
+    (if (zero? k)
+        zilch
+        (succ (number->nat (sub1 k))))))
+
+(define nat->number
+  (lambda (x)
+    (if (zilch? x)
+        0
+        (add1 (nat->number (pred x))))))
+
+(define smaller?
+  (lambda (x y)
+    (cond ((zilch? x) (not (zilch? y)))
+          ((zilch? y) #f)
+          (else
+           (smaller? (pred x) (pred y))))))
+
+;; x - 0 = x
+;; x - y = (x-1) - (y-1)
+(define minus
+  (lambda (x y)
+    (if (zilch? y)
+        x
+        (minus (pred x) (pred y)))))
+
+;; x + 0 = x
+;; x + y = (x+1) + (y-1)
+(define plus
+  (lambda (x y)
+    (if (zilch? y)
+        x
+        (plus (succ x) (pred y)))))
+
+;; x * 0 = 0
+;; x * 1 = x
+;; x * y = x*(y-1) + x
+(define times
+  (lambda (x y)
+    (cond ((zilch? y) zilch)
+          ((zilch? (pred y)) x)
+          (else
+           (plus (times x (pred y)) x)))))
+
+(define one (succ zilch))
+
+;; x^0 = 1
+;; x^1 = x
+;; x^y = x^(y-1) * x
+(define power
+  (lambda (x y)
+    (cond ((zilch? y) one)
+          ((zilch? (pred y)) x)
+          (else
+           (times (power x (pred y)) x)))))
+
+;; a higher-order function which abstracts the pattern
+(define ackerman
+  (lambda (n)
+    (if (zilch? n)
+        plus
+        (lambda (x y)
+          (cond ((zilch? y) (pred n))
+                ((zilch? (pred y)) x)
+                (else
+                 ((ackerman (pred n)) ((ackerman n) x (pred y)) x)))))))

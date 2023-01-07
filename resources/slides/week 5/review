@@ -1,0 +1,139 @@
+(define take
+  (lambda (n ls)
+    (if (= n 0)
+        '()
+        (cons (car ls)
+              (take (- n 1) (cdr ls))))))
+
+(define drop
+  (lambda (n ls)
+    (if (= n 0)
+        ls
+        (drop (- n 1) (cdr ls)))))
+
+(define sublist
+  (lambda (ls n m)
+    (take (- m n) (drop n ls))))
+
+(define append
+  (lambda (ls0 ls1)
+    (if (null? ls0)
+        ls1
+        (cons (car ls0)
+              (append (cdr ls0) ls1)))))
+
+(define reverse
+  (lambda (ls)
+    (if (null? ls)
+        '()
+        (append (reverse (cdr ls))
+                (list (car ls))))))
+
+(define reverse
+  (lambda (ls)
+    (letrec
+      ((loop
+        (lambda (ls acc)
+          (if (null? ls)
+              acc
+              (loop (cdr ls) (cons (car ls) acc))))))
+      (loop ls '()))))
+
+(define append
+  (lambda (ls0 ls1)
+    (letrec
+      ((loop
+        (lambda (ls acc)
+          (if (null? ls)
+              acc
+              (loop (cdr ls) (cons (car ls) acc))))))
+      (loop (loop ls0 '()) ls1))))
+
+(define deep-reverse
+  (lambda (ls)
+    (cond ((null? ls) '())
+          ((pair? (car ls))
+           (append (deep-reverse (cdr ls))
+                   (list (deep-reverse (car ls)))))
+          (else
+           (append (deep-reverse (cdr ls))
+                   (list (car ls)))))))
+
+(define delete
+  (lambda (item ls)
+    (cond ((null? ls) '())
+          ((eq? (car ls) item)
+           (delete item (cdr ls)))
+          (else
+           (cons (car ls)
+                 (delete item (cdr ls)))))))
+
+(define delete-duplicates
+  (lambda (ls)
+    (if (null? ls)
+        '()
+        (let ((first (car ls)))
+          (cons first (delete first (delete-duplicates (cdr ls))))))))
+
+(define vars
+  (lambda (ls)
+    (if (null? ls)
+        '()
+        (cons (caar ls)
+              (vars (cdr ls))))))
+
+(define vals
+  (lambda (ls)
+    (if (null? ls)
+        '()
+        (cons (cadar ls)
+              (vals (cdr ls))))))
+
+(define let->lambda
+  (lambda (sexpr)
+    (let ((defs (cadr sexpr)))
+      (append (list (list 'lambda (vars defs) (caddr sexpr)))
+              (vals defs)))))
+
+(define deep-flatten
+  (lambda (ls)
+    (cond ((null? ls) '())
+          ((pair? (car ls))
+           (append (deep-flatten (car ls))
+                   (deep-flatten (cdr ls))))
+          (else
+           (cons (car ls)
+                 (deep-flatten (cdr ls)))))))
+
+;; good
+(define assoc
+  (lambda (item ls)
+    (cond ((null? ls) #f)
+          ((eq? item (caar ls)) (car ls))
+          (else
+           (assoc item (cdr ls))))))
+
+;; better
+(define assoc
+  (lambda (item ls)
+    (letrec
+      ((loop
+        (lambda (ls)
+          (cond ((null? ls) #f)
+                ((eq? item (caar ls)) (car ls))
+                (else
+                 (loop (cdr ls)))))))
+      (loop ls))))
+
+(define prefix?
+  (lambda (ls0 ls1)
+    (or (null? ls0)
+        (and (eq? (car ls0) (car ls1))
+             (prefix? (cdr ls0) (cdr ls1))))))
+
+
+(define sublist?
+  (lambda (ls0 ls1)
+    (and (not (null? ls1))
+	 (or (prefix? ls0 ls1)
+	     (sublist? ls0 (cdr ls1))))))

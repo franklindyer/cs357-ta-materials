@@ -1,0 +1,32 @@
+(define compose
+  (lambda (f g)
+    (lambda (x)
+      (f (g x)))))
+
+(define iterate
+  (lambda (f n)
+    (if (= n 0)
+        (lambda (x) x)
+        (compose f (iterate f (- n 1))))))
+
+(define list-ref
+  (lambda (ls n)
+    (car ((iterate cdr n) ls))))
+
+(define plus
+  (lambda (x y)
+    ((iterate add1 y) x)))
+
+;; ((improve 81) 81) => 41
+;; ((improve 81) 41) => 21.5
+;; ((improve 81) 21.5) => 12.6
+;; ((improve 81) 12.6) => 9.5
+;; ((improve 81) 9.5) => 9.0
+(define improve
+  (lambda (x)
+    (lambda (guess)
+      (/ (+ guess (/ x guess)) 2))))
+
+(define square-root
+  (lambda (x)
+    ((iterate (improve x) 20) x)))

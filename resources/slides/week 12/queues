@@ -1,0 +1,93 @@
+data Tree a = Empty | Leaf a | Fork a (Tree a) (Tree a) deriving (Show)
+
+foo = Fork 'j' (Fork 'f' (Fork 'a' Empty (Leaf 'd')) (Leaf 'h')) (Fork 'k' Empty (Leaf 'z'))
+
+--             j
+--           /  \
+--          f    k
+--         / \  / \
+--        a   h    z
+--       / \
+--          d
+
+-- jfadhkz
+dfs :: Tree a -> [a]
+dfs Empty = []
+dfs (Leaf x) = [x]
+dfs (Fork x yt zt) = x:(dfs yt ++ dfs zt)
+
+-- dfs using stack of trees
+dfs' :: Tree a -> [a]
+dfs' xt = loop [xt] []
+    where loop [] acc1 = reverse acc1
+          loop ((Empty):acc0) acc1 = loop acc0 acc1
+          loop ((Leaf x):acc0) acc1 = loop acc0 (x:acc1)
+          loop ((Fork x yt zt):acc0) acc1 = loop (yt:(zt:acc0)) (x:acc1)
+
+-- [j]             []
+-- [f k]           [j]
+-- [a h k]         [f j]
+-- [d h k]         [a f j]
+-- [h k]           [d a f j]
+-- [k]             [h d a f j]
+-- [z]             [k h d a f j]
+-- []              [z k h d a f j]
+
+-- jfkahzd
+bfs :: Tree a -> [a]
+bfs xt = loop [xt] []
+    where loop [] acc1 = reverse acc1
+          loop ((Empty):acc0) acc1 = loop acc0 acc1
+          loop ((Leaf x):acc0) acc1 = loop acc0 (x:acc1)
+          loop ((Fork x yt zt):acc0) acc1 = loop (acc0 ++ [yt] ++ [zt]) (x:acc1)
+
+-- [j]             []
+-- [f k]           [j]
+-- [k a h]         [f j]
+-- [a h z]         [k f j]
+-- [h z d]         [a k f j]
+-- [z d]           [h a k f j]
+-- [d]             [z h a k f j]
+-- []              [d z h a k f j]
+
+-- fast functional queue
+data Queue a = Nil | Queue {front :: [a], back :: [a]} deriving (Show)
+
+--instance (Show a) => Show (Queue a) where
+--    show Nil = ""
+--    show (Queue xs ys) = show (reverse ((reverse ys) ++ xs))
+
+instance (Eq a) => Eq (Queue a) where
+    Nil == Nil = True
+    (Queue xs ys) == (Queue us vs) = ((reverse ys) ++ xs) == ((reverse vs) ++ us)
+
+-- O(1)
+enqueue y Nil = Queue [] [y]
+enqueue y (Queue xs ys) = Queue xs (y:ys)
+
+bar = enqueue 3 (enqueue 2 (enqueue 1 Nil))
+
+-- amortized O(1)
+dequeue (Queue [x] []) = (x,Nil)
+dequeue (Queue [] [x]) = (x,Nil)
+dequeue (Queue [] ys) = (x,Queue xs []) where (x:xs) = reverse ys
+dequeue (Queue (x:xs) ys) = (x,Queue xs ys)
+
+bfs' xt = loop (xt,Nil) []
+    where loop (Empty,Nil) acc1 = reverse acc1
+          loop (Leaf x,Nil) acc1 = reverse (x:acc1)
+          loop (Empty,acc0) acc1 = loop (dequeue acc0) acc1
+          loop (Leaf x,acc0) acc1 = loop (dequeue acc0) (x:acc1)
+          loop (Fork x yt zt,acc0) acc1 =
+              loop (dequeue (enqueue zt (enqueue yt acc0))) (x:acc1)
+
+--Show Eq Enum Ord Num Fractional Functor
+
+instance Functor Queue where
+    fmap _ Nil = Nil
+    fmap f (Queue xs ys) = Queue (map f xs) (map f ys)
+
+instance Functor Tree where
+    fmap _ Empty = Empty
+    fmap f (Leaf x) = (Leaf (f x))
+    fmap f (Fork x yt zt) = (Fork (f x) (fmap f yt) (fmap f zt))

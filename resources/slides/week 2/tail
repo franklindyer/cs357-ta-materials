@@ -1,0 +1,59 @@
+(define member?
+  (lambda (item ls)
+    (or (eq? (car ls) item)
+        (member? item (cdr ls)))))
+
+(define fib
+  (lambda (x)
+    (if (< x 2)
+        x
+        (+ x (fib (- x 1)) (fib (- x 2))))))
+
+(define fib
+  (lambda (x acc0 acc1)
+    (if (= x 0)
+        acc0
+        (fib (- x 1) acc1 (+ acc0 acc1)))))
+
+(define even
+  (lambda (x) 
+    (if (= x 0)
+        #t
+        (odd (- x 1)))))
+
+(define odd
+  (lambda (x)
+    (if (= x 0)
+        #f
+        (even (- x 1)))))
+
+(define length
+  (lambda (ls)
+    (length-it ls 0)))
+
+(define length-it
+  (lambda (ls acc)
+    (if (null? ls)
+        acc
+        (length-it (cdr ls) (+ acc 1)))))
+
+(define reverse
+  (lambda (ls)
+    (if (null? ls)
+        '()
+        (append (reverse (cdr ls))
+                (list (car ls))))))
+
+(define reverse
+  (lambda (ls)
+    (reverse-it ls '())))
+
+;; (3 2 1) '()
+;; (2 1)   '(3)
+;; (1)     '(2 3)
+;; ()      '(1 2 3)
+(define reverse-it
+  (lambda (ls acc)
+    (if (null? ls)
+        acc
+        (reverse-it (cdr ls) (cons (car ls) acc)))))
