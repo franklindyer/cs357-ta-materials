@@ -17,7 +17,7 @@
     (
       (cum-unit-test
         (lambda (passed f ins)
-	  (if (empty? ins)
+	  (if (null? ins)
 	    (begin
 	      (display (if v "End of testing.\n" ""))
 	      passed
@@ -43,9 +43,10 @@
 	      (else
 	         (filter-inds (cdr bools) (cdr vals)))))
 
-(define (run-graded-test f ins-pts utest v)
+(define (run-graded-test name-f ins-pts utest v)
 	(let*
 	   (
+	      (f (eval name-f))
 	      (passed (run-unit-test f (map car ins-pts) utest v))
 	      (outof (apply + (map cdr ins-pts)))
 	      (score (apply + (filter-inds passed (map cdr ins-pts))))
@@ -59,7 +60,7 @@
 	      (display score)
 	      (display "/")
 	      (display outof)
-	      (display "\n")
+	      (display "\n\n")
 	      score
 	   )))
 
@@ -83,6 +84,7 @@
       (cond
          ((null? ins-outs) #f)
       	 ((equal? x (caar ins-outs)) (equal? y (cdar ins-outs))) 
-	 (else ((cases-test (cdr ins-outs)) x y)))
+	 (else ((cases-test (cdr ins-outs)) x y))
+      )
    )
 )
