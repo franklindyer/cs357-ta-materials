@@ -1,0 +1,38 @@
+Args: (0)
+Output: 0
+
+Args: (1)
+Output: 0
+
+Args: (2)
+Output: 0
+
+Args: (3)
+Output: 0
+
+Args: (50)
+Output: 1
+
+End of testing.
+Summary:
+Tests passed: (#t #t #t #t #f)
+Score: 12/13
+
+Args: ((5 4 3 2 1))
+Output: ()
+
+Args: ((3 5 4 1 2))
+Output: ()
+
+Args: ((420 69 421))
+Output: ()
+
+Args: (())
+Output: ()
+
+End of testing.
+Summary:
+Tests passed: (#f #f #f #t)
+Score: 1/7
+
+13
