@@ -1,4 +1,0 @@
-for sub in submissions/*.rkt; do
-    echo $sub
-    racket "grade_sub.rkt" "testcases_sample.rkt" "$sub" > feedback/feedback-$(basename $sub)    
-done
