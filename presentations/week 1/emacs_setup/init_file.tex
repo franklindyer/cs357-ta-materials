@@ -1,0 +1,107 @@
+\subsection{The init.el file}
+
+\begin{frame}[fragile]{Location of init.el}
+  \begin{itemize}
+  \item Emacs is a highly customizable editor. Emacs users can specify
+    additional functionality using the ``init.el''.
+  \item ``init.el'' is usually located in the following path:
+    \begin{itemize}
+    \item Windows: \verb|??|
+    \item MacOs: \verb|$HOME/.emacs.d|
+    \item Linux: \verb|$HOME/.emacs.d|
+    \end{itemize}
+  \end{itemize} 
+\end{frame}
+
+\begin{frame}[fragile]{Suggested init.el (1/4)}
+  \begin{itemize}
+  \item We recommend the following changes to your ``init.el'' file to allow us
+    work with the software installed so far:
+\begin{verbatim}
+(require 'package)
+(custom-set-variables
+  '(package-archives
+     (quote
+       (("gnu" . "https://elpa.gnu.org/packages/")
+        ("melpa" . "https://melpa.org/packages/")))))
+(package-initialize)
+\end{verbatim}
+  \end{itemize} 
+\end{frame}
+
+\begin{frame}[fragile]{Suggested init.el (2/4)}
+\begin{verbatim}
+(setq package-list '(haskell-mode))
+
+; fetch the list of packages available 
+(unless package-archive-contents
+  (package-refresh-contents))
+
+; install the missing packages
+(dolist (package package-list)
+  (unless (package-installed-p package)
+    (package-install package)))
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{Suggested init.el (3/4)}
+ \begin{verbatim}
+;; Basic UI setup
+(require 'font-lock)
+(global-font-lock-mode t)
+(show-paren-mode 1)
+(put 'upcase-region 'disabled nil)
+(put 'eval-expression 'disabled nil)
+
+;; Basic Racket setup
+(setq scheme-program-name "<PATH-TO-RACKET>")
+(setq auto-mode-alist
+      (cons '("\\.rkt\\'" . scheme-mode)
+            auto-mode-alist))
+\end{verbatim} 
+\end{frame}
+
+\begin{frame}[fragile]{Suggested init.el (4/4)}
+ \begin{verbatim}
+;; Basic Haskell setup
+(require 'haskell-mode)
+(setq haskell-program-name "<PATH-TO-GHCI>")
+(setq auto-mode-alist
+      (cons '("\\.hs\\'" . haskell-mode)
+            auto-mode-alist))
+(add-hook 'haskell-mode-hook 'turn-on-haskell-doc-mode)
+(add-hook 'haskell-mode-hook 'turn-on-haskell-indent)
+\end{verbatim} 
+\end{frame}
+
+\begin{frame}[fragile]{Locations - Racket}
+  \begin{itemize}
+  \item Using installers:
+    \begin{itemize}
+    \item Windows: \verb|C:\Program Files\Racket|
+    \item MacOs: \verb|/Applications/Racket v8.7/bin|
+    \item Linux: \verb|<CHOOSEN LOCATION>/racket/bin|
+    \end{itemize}
+  \item Using package managers:
+    The output of the command \verb|which racket| is the path where
+    \verb|racket| is located in your system.
+
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Locations - Haskell}
+  \begin{itemize}
+  \item Using binary packages:
+    \begin{itemize}
+    \item Windows:
+      \verb|<CHOSEN-LOCATION>\|
+      \verb|ghc-9.4.4-x86_64-unknown-mingw32-int_native.tar\|
+      \verb|ghc-9.4.4-x86_64-unknown-mingw32\bin|
+    \item MacOs: \verb|<CHOSEN-LOCATION>/ghc-9.4.4-<ARCH>-apple-darwin/bin|
+    \item Linux: \verb|<CHOSEN LOCATION>/ghc-9.4.4-x86_64-unknown-linux/bin|
+    \end{itemize}
+  \item Using package managers:
+    The output of the command \verb|which ghc| is the path where
+    \verb|ghc| is located in your system.
+  \end{itemize}
+\end{frame}

@@ -1,4 +1,4 @@
-#+TITLE: Basic logistics and Setting up a working environment in Emacs
+#+TITLE: Basic logistics
 #+AUTHOR: Jose Abel Castellanos Joo
 #+OPTIONS: toc:nil
 
@@ -19,5 +19,3 @@
 ** TODO Homemork distribution
 ** Homemork submission
 *** TODO Explain homework format, i.e. a single file containing implementation answer and non-implementation answer as comments.
-* Setting up a working environment in Emacs
-** TODO
