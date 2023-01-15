@@ -1,0 +1,139 @@
+;; This will not run in Racket.  It requires Guile (or another Scheme implementation with set-car!)
+  
+(define assoc
+  (lambda (key alist)
+    (if (null? alist)
+	#f
+	(if (eq? (car (car alist)) key)
+	    (car alist)
+	    (assoc key (cdr alist))))))
+
+(define lookup
+  (lambda (var env)
+    ((lambda (val)
+       (if val
+	   (car (cdr val))
+	   (lookup var (cdr env))))
+     (assoc var (car env)))))
+
+(define add-defn!
+  (lambda (var val env)
+    (set-car! env (cons (cons var (cons val (quote ()))) (car env)))
+    (quote ok)))
+
+(define make-frame
+  (lambda (vars vals)
+    (if (null? vars)
+	(quote ())
+	(cons (cons (car vars) (cons (car vals) (quote ())))
+	      (make-frame (cdr vars) (cdr vals))))))
+
+(define make-closure
+  (lambda (args body env)
+    (cons (quote closure)
+	  (cons args (cons body (cons env (quote ())))))))
+
+(define self-evaluating?
+  (lambda (sexpr)
+    (if (pair? sexpr)
+	(if (eq? (car sexpr) (quote closure)) #t #f)
+	(if (symbol? sexpr) #f #t))))
+
+(define apply-function
+  (lambda (proc vals)
+    (if (pair? proc)
+	(sequence
+	  (car (cdr (cdr proc)))
+	  (cons (make-frame (car (cdr proc)) vals)
+		(car (cdr (cdr (cdr proc))))))
+	(apply proc vals))))
+
+(define eval
+  (lambda (sexpr env)
+    (if (self-evaluating? sexpr)
+	sexpr
+	(if (symbol? sexpr)
+	    (lookup sexpr env)
+	    ((lambda (first)
+	       (if (eq? first (quote quote))
+		   (car (cdr sexpr))
+		   (if (eq? first (quote define))
+		       (add-defn! (car (cdr sexpr))
+		         (eval (car (cdr (cdr sexpr))) env)
+			 env)
+		       (if (eq? first (quote if))
+			   (if (eval (car (cdr sexpr)) env)
+			       (eval (car (cdr (cdr sexpr))) env)
+			       (eval (car (cdr (cdr (cdr sexpr)))) env))
+			   (if (eq? first (quote lambda))
+			       (make-closure (car (cdr sexpr))
+		                 (cdr (cdr sexpr))
+				 env)
+			       (if (eq? first (quote begin))
+				   (sequence (cdr sexpr) env)
+                                   (apply-function (eval (car sexpr) env)
+				     (eval-list (cdr sexpr) env))))))))
+
+            (car sexpr))))))
+
+(define eval-list
+  (lambda (ls env)
+    (if (null? ls)
+	(quote ())
+	(cons (eval (car ls) env)
+	      (eval-list (cdr ls) env)))))
+
+(define sequence
+  (lambda (ls env)
+    (if (null? (cdr ls))
+	(eval (car ls) env)
+	(begin
+	  (eval (car ls) env)  
+	  (sequence (cdr ls) env)))))
+
+(define done?
+  (lambda (sexpr)
+    (if (pair? sexpr)
+	(eq? (car sexpr) (quote exit))
+	#f)))
+
+(define scheme-main-loop
+  (lambda (depth env)
+    (display depth)
+    (display "> ")
+    ((lambda (input)
+       (if (done? input)
+	   (quote done)
+	   ((lambda ()
+	      (write (eval input env))
+	      (newline)
+	      (scheme-main-loop depth env)))))
+     (read))))
+
+(define scheme
+  (lambda (depth)
+    (display "Welcome to Meta-circular Scheme!")
+    (newline)
+    (scheme-main-loop
+     depth
+     global-env)))
+
+(define global-env
+  (cons (cons (cons (quote car) (cons car (quote ())))
+     (cons (cons (quote cdr) (cons cdr (quote ())))
+     (cons (cons (quote cons) (cons cons (quote ())))
+     (cons (cons (quote set-car!) (cons set-car! (quote ())))
+     (cons (cons (quote null?) (cons null? (quote ())))
+     (cons (cons (quote eq?) (cons eq? (quote ())))
+     (cons (cons (quote +) (cons + (quote ())))
+     (cons (cons (quote -) (cons - (quote ())))
+     (cons (cons (quote *) (cons * (quote ())))
+     (cons (cons (quote apply) (cons apply (quote ())))
+     (cons (cons (quote symbol?) (cons symbol? (quote ())))
+     (cons (cons (quote pair?) (cons pair? (quote ())))
+     (cons (cons (quote read) (cons read (quote ())))
+     (cons (cons (quote write) (cons write (quote ())))
+     (cons (cons (quote display) (cons display (quote ())))
+     (cons (cons (quote newline) (cons newline (quote ())))
+  (quote ())))))))))))))))))
+  (quote ())))

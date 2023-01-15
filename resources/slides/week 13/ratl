@@ -1,0 +1,42 @@
+-- 300 BC Euclid
+gcd' (x, y) =
+  if x == y then x
+  else if x < y then gcd' (x, y - x)
+  else gcd' (x - y, x)
+
+lcm' (x, y) = head [ x * i | i <- [1..], j <- [1..x], x*i == y*j]
+
+data Rational = Rational {numr :: Int, denr :: Int}
+
+(%) :: Int -> Int -> Rational
+x % y = let z = gcd x y in Rational (x `div` z) (y `div` z)
+
+instance Eq Rational where
+  (Rational a b) == (Rational c d) = a * d == b * c
+
+instance Show Rational where
+  show (Rational x 1) = show x
+  show (Rational 0 _) = "0"
+  show (Rational x y) = show x ++ "/" ++ show y
+
+instance Num Rational where
+  (Rational a b) * (Rational c d) = (a * c) % (b * d)
+  (Rational a b) + (Rational c d) = (a*d + c*b) % (b*d)
+  fromInteger x = fromIntegral x % 1
+
+instance Fractional Rational where
+  (Rational a b) / (Rational c d) = (a * d) % (b * c)
+
+instance Ord Rational where
+  (Rational a b) > (Rational c d) = a*d > b*c
+  (Rational a b) < (Rational c d) = a*d < b*c
+
+instance Enum Rational where
+  succ (Rational a b) = if a < b then Rational (succ a) b else Rational 1 (succ b)
+  fromEnum x = f x $ zip rats ints
+  toEnum x = f x $ zip ints rats
+
+ints = 1 : map succ ints
+rats = (1 % 1) : map succ rats
+
+f x = snd . head . dropWhile ((/= x) . fst)

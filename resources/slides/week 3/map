@@ -1,0 +1,110 @@
+;; ok
+(define maxn
+  (lambda args
+    (letrec
+      ((singleton?
+         (lambda (ls) 
+           (null? (cdr ls))))
+       (max2
+         (lambda (x y)
+           (if (> x y)
+             x
+             y)))
+       (max-list
+         (lambda (ls)
+           (if (singleton? ls)
+             (car ls)
+             (max2 (car ls)
+                   (max-list (cdr ls)))))))
+    (max-list args))))
+  
+;; better
+(define maxn
+  (lambda args
+    (letrec
+      ((singleton?
+        (lambda (ls) 
+          (null? (cdr ls))))
+       (max2
+        (lambda (x y)
+          (if (> x y)
+            x
+            y))))
+      (if (singleton? args)
+        (car args)
+        (max2 (car args)
+              (apply maxn (cdr args)))))))
+
+;; best
+(define maxn
+  (lambda (first . rest)
+    (letrec
+      ((max2
+        (lambda (x y)
+          (if (> x y)
+            x
+            y))))
+      (if (null? rest)
+        first
+        (max2 first (apply maxn rest)))))
+
+(define quadratic-formula
+  (lambda (a b c)
+    (let* ((discriminant (sqrt (- (* b b) (* 4 a c))))
+	   (denominator (* 2 a))
+           (-b (- b))
+           (root (lambda (pm) (/ (pm -b discriminant) denominator))))
+      (list (root +) (root -)))))
+
+;; simple map
+(define map
+  (lambda (proc ls)
+    (if (null? ls)
+	'()
+	(cons (proc (car ls)) (map proc (cdr ls))))))
+
+(define let-args
+  (lambda (exp)
+    (map car (cadr exp))))
+
+(define let-vals
+  (lambda (exp)
+    (map cadr (cadr exp))))
+
+(define let-body
+  (lambda (exp)
+    (caddr exp)))
+
+(define let->lambda
+  (lambda (exp)
+    (cons (list 'lambda (let-args exp) (let-body exp))
+	  (let-vals exp))))
+
+(define filter
+  (lambda (pred ls)
+    (cond ((null? ls) ())
+	  ((pred (car ls))
+	   (cons (car ls) (filter pred (cdr ls))))
+	  (else
+	   (filter pred (cdr ls))))))
+
+(define delete
+  (lambda (item ls)
+    (filter (lambda (x) (not (eq? x item))) ls)))
+
+(define iota
+  (lambda (n)
+    (letrec
+      ((loop 
+	(lambda (m acc)
+	  (if (= m 0)
+	      acc
+	      (loop (sub1 m) (cons m acc))))))
+      (loop n ()))))
+
+(define fact
+  (lambda (n)
+    (apply * (iota n))))
+
+;; e = 1/0! + 1/1! + 1/2! + 1/3! + 1/4! ...
+(define e (apply + (map / (map fact (map sub1 (iota 10))))))

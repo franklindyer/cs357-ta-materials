@@ -1,0 +1,69 @@
+(define counter-maker
+  (lambda ()
+    (let ((c 0))
+      (lambda (msg)
+        (case msg
+          ((type) 'counter)
+          ((inc!) (set! c (+ c 1)))
+          ((show) c)
+          (else 'error))))))
+
+(define smart-proc-maker
+  (lambda (proc)
+    (let ((c 0))
+      (lambda (msg . args)
+        (case msg
+          ((type) 'smart-proc)
+          ((show) c)
+          (else
+           (begin
+             (set! c (+ c 1))
+             (apply proc msg args))))))))
+
+(define smart+ (smart-proc-maker +))
+
+(define slow-fib
+  (lambda (x)
+    (if (< x 2)
+        x
+        (smart+ (slow-fib (- x 1))
+                (slow-fib (- x 2))))))
+
+;; better
+(define fast-fib
+  (lambda (x)
+    (letrec
+      ((loop
+        (lambda (x acc0 acc1)
+          (if (= x 0)
+              acc0
+              (loop (- x 1) acc1 (smart+ acc0 acc1))))))
+      (loop x 0 1))))
+
+(define memoize
+  (lambda (proc)
+    (let ((table (make-vector 1000 '())))
+      (lambda (x)
+        (let ((answer (vector-ref table x)))
+          (if (null? answer)
+              (let ((answer (proc x)))
+                (vector-set! table x answer)
+                answer)
+              answer))))))
+
+(define slow-fib
+  (lambda (x)
+    (if (< x 2)
+        x
+        (+ (slow-fib (- x 1))
+           (slow-fib (- x 2))))))
+
+(define fast-second-time-fib (memoize slow-fib))
+
+(define fast-fib
+   (memoize
+    (lambda (x)
+      (if (< x 2)
+	  x
+	  (+ (fast-fib (- x 1))
+	     (fast-fib (- x 2)))))))

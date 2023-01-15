@@ -1,0 +1,133 @@
+(define round-n-places
+  (lambda (x n)
+    (let ((pot (expt 10.0 n)))
+      (/ (floor (* x pot)) pot))))
+
+(define round-n-places-c
+  (lambda (n)
+    (lambda (x)
+      (let ((pot (expt 10.0 n)))
+	(/ (floor (* x pot)) pot)))))
+
+(define foo
+  (lambda (w x y z)
+    (if (= w x)
+	y
+	z)))
+
+(define bill (foo 1 2 3 4))
+
+(define bar
+  (lambda (w)
+    (lambda (x)
+      (lambda (y)
+	(lambda (z)
+	  (if (= w x)
+	      y
+	      z))))))
+
+(define hillary ((((bar 1) 2) 3) 4))
+
+(define fred
+  (lambda (a b c d w x y z)
+    (apply + (map * (list a b c d) (list w x y z)))))
+
+(define al (fred 1 1 1 1 2 2 2 2))
+
+(define wilma
+  (lambda (a b c d)
+    (lambda (w x y z)
+      (apply + (map * (list a b c d) (list w x y z))))))
+
+(define tipper ((wilma 1 1 1 1) 2 2 2 2))
+
+(define dot
+  (lambda v0
+    (lambda v1
+      (apply + (map * v0 v1)))))
+
+(define add-list
+  (lambda (ls)
+    (if (null? ls)
+        0
+        (+ (car ls)
+           (add-list (cdr ls))))))
+
+(define sqrt-all
+  (lambda (ls)
+    (if (null? ls)
+        '()
+        (cons (sqrt (car ls))
+              (sqrt-all (cdr ls))))))
+
+(define length
+  (lambda (ls)
+    (if (null? ls)
+        0
+        (+ 1 (length (cdr ls))))))
+
+(define flat-recur
+  (lambda (seed list-proc)
+    (lambda (ls)
+      (if (null? ls)
+          seed
+          (list-proc
+           (car ls)
+           ((flat-recur seed list-proc) (cdr ls)))))))
+
+;; better
+(define flat-recur
+  (lambda (seed list-proc)
+    (letrec
+      ((pattern
+        (lambda (ls)
+          (if (null? ls)
+              seed
+              (list-proc (car ls)
+                         (pattern (cdr ls)))))))
+      pattern)))
+
+(define add-list (flat-recur 0 +))
+
+(define sqrt-all (flat-recur '() (lambda (x y) (cons (sqrt x) y))))
+
+(define length (flat-recur 0 (lambda (x y) (+ 1 y))))
+
+(define map
+  (lambda (proc ls)
+    (if (null? ls)
+        '()
+        (cons (proc (car ls))
+              (map proc (cdr ls))))))
+
+(define map-c
+  (lambda (proc)
+    (lambda (ls)
+      (if (null? ls)
+          '()
+          (cons (proc (car ls))
+                ((map-c proc) (cdr ls)))))))
+
+(define map-c
+  (lambda (proc)
+    (flat-recur '() (lambda (x y) (cons (proc x) y)))))
+
+(define map
+  (lambda (proc ls)
+    ((map-c proc) ls)))
+
+(define map
+  (lambda (proc ls)
+    ((flat-recur '() (lambda (x y) (cons (proc x) y))) ls)))
+
+(define filter
+  (lambda (pred ls)
+    (if (null? ls)
+        '()
+        (if (pred (car ls))
+            (cons (car ls) (filter pred (cdr ls)))
+            (filter pred (cdr ls))))))
+
+(define filter
+  (lambda (pred ls)
+    ((flat-recur '() (lambda (x y) (if (pred x) (cons x y) y))) ls)))

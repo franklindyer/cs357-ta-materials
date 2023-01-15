@@ -1,0 +1,62 @@
+-- rot "ABCD" => "BCDA"
+rot [] = []
+rot [x] = [x]
+rot (x:xs) = xs ++ [x]
+
+--rotate 2 "ABCD" => "CDAB"
+rotate 0 xs = xs
+rotate n xs = rotate (n-1) (rot xs)
+
+--[rot rot rot ... rot] => rot . rot . rot ... rot
+rotate' n = foldr (.) id $ take n $ repeat rot
+
+-- iterate f x => [x f(x) f(f(x)) ... f(f(... x ...))]
+
+rotate'' n xs = (iterate rot xs) !! n
+
+--rotations "ABCD" => ["ABCD","BCDA","CDAB","DABC"]
+rotations xs = map (\n -> rotate n xs) [0..(length xs) - 1]
+
+rotations' xs = map (`rotate` xs) [0..(length xs) - 1]
+
+rotations'' xs = map ((flip rotate) xs) [0..(length xs) - 1]
+
+rotations''' xs = [rotate n xs | n <- [0..(length xs) - 1]]
+
+flip' f = \x y -> f y x
+
+compose :: (b -> c) -> (a -> b) -> (a -> c)
+compose f g = \x -> f (g x)
+
+church f n = (iterate (. f) id) !! n
+
+--fib 0 acc0 _ = acc0
+--fib n acc0 acc1 = fib (n-1) acc1 (acc0 + acc1)
+
+--0 1
+--1 1
+--1 2
+--2 3
+--3 5
+--5 8
+
+fib n = fst $ (iterate (\(acc0,acc1) -> (acc1,acc0 + acc1)) (0,1)) !! n
+
+data Tree a = Leaf a | Fork (Tree a) (Tree a) deriving (Show, Eq)
+
+foo = Fork (Leaf 1) (Fork (Leaf 2) (Leaf 3))
+bar = Fork (Leaf 4) (Fork (Leaf 5) (Leaf 6))
+
+zipTrees :: (Tree a) -> (Tree b) -> (Tree (a,b))
+zipTrees (Leaf x) (Leaf y) = (Leaf (x,y))
+zipTrees (Fork xl xr) (Fork yl yr) = (Fork (zipTrees xl yl) (zipTrees xr yr))
+
+foldTree f _ (Leaf x) = f x
+foldTree f g (Fork xt yt) = g (foldTree f g xt) (foldTree f g yt)
+
+mapTree f = foldTree (Leaf . f) Fork
+
+addTrees xt yt = mapTree (uncurry (+)) (zipTrees xt yt)
+
+addTrees' = (mapTree (uncurry (+))) # zipTrees
+    where f # g = \x y -> f (g x y)

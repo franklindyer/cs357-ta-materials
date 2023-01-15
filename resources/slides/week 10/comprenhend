@@ -1,0 +1,41 @@
+-- e = 1/1! + 1/2! + 1/3! + ...
+e = sum $ map (\n -> 1 / (product [1..n])) [0..10]
+
+outerProduct f xs ys = map (\x -> map (\y -> f x y) ys) xs
+
+select _ [] [] = []
+select pred (x:xs) (y:ys) = if (pred x) then y:rest else rest where rest = select pred xs ys
+
+primes n = select (== 2) (map length (map (filter (== 0)) (outerProduct rem [1..n] [1..n]))) [1..n]
+
+powerset [] = [[]]
+powerset (x:xs) = subset ++ (map (x:) subset) where subset = powerset xs
+
+permutations [] = [[]]
+permutations xs = concat $ map (\x -> map (x:) (permutations (filter (/= x) xs))) xs
+
+e' = sum [ 1 / (product [1..n]) | n <- [0..10]]
+
+outerProduct f xs ys = [[f x y | y <- ys] | x <- xs]
+
+select pred xs ys = [y | (x,y) <- zip xs ys, pred x]
+
+powerset [] = [[]]
+powerset (x:xs) = subset ++ [x:ys | ys <-subset]
+    where subset = powerset xs
+
+-- outerproduct list comprehension
+intersect xs ys = [x | x <- xs, y <- ys, x == y]
+
+perfect n = [(i,j,k) | i <- [1..n], j <- [1..n], k <- [1..n], i*i + j*j == k*k]
+
+primes' n = [z | z <- [1..n], length (factors z) == 2]
+    where factors n = [(x,y) | x <- [1..n], y <- [1..n], x*y == n]
+
+-- nested list comprehensions
+identity n = [ [kronecker i j | i <- [1..n]] | j <- [1..n]]
+    where kronecker i j = if i == j then 1 else 0
+
+-- recursive list comprehension
+permutations' [] = [[]]
+permutations' xs = [ x:perms | x <- xs, perms <- permutations' (filter (/= x) xs)]

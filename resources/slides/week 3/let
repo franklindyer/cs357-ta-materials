@@ -1,0 +1,172 @@
+(define eval-quadratic
+  (lambda (a b c x)
+    (+ (* a x x) (* b x) c)))
+
+;; ax^2 + bx + c = 0
+;; (-b +/- sqrt(b^2 - 4ac))/2a
+(define quadratic1
+  (lambda (a b c)
+    (list (/ (+ (- b) (sqrt (- (* b b) (* 4 a c)))) 
+	     (* 2 a))
+	  (/ (- (- b) (sqrt (- (* b b) (* 4 a c)))) 
+	     (* 2 a)))))
+
+(define quadratic2
+  (lambda (a b c)
+    (let ((discriminant (sqrt (- (* b b) (* 4 a c))))
+	  (denominator (* 2 a))
+	  (-b (- b)))
+      (list (/ (+ -b discriminant) denominator)
+	    (/ (- -b discriminant) denominator)))))
+
+(define quadratic3
+  (lambda (a b c)
+    ((lambda (discriminant denominator -b)
+       (list (/ (+ -b discriminant) denominator)
+	     (/ (- -b discriminant) denominator)))
+     (sqrt (- (* b b) (* 4 a c)))
+     (* 2 a)
+     (- b))))
+
+(define fact-helper
+  (lambda (x acc)
+    (if (= x 0)
+	acc
+	(fact-helper (- x 1) (* x acc)))))
+
+(define fact
+  (lambda (x)
+    (fact-helper x 1)))
+
+(define fact
+  (lambda (x)
+    (letrec
+      ((loop
+	(lambda (x acc)
+	  (if (= x 0)
+	      acc
+	      (loop (- x 1) (* x acc))))))
+      (loop x 1))))
+
+(define append
+  (lambda (ls1 ls2)
+    (letrec
+      ((loop
+	(lambda (ls acc)
+	  (if (null? ls)
+	      acc
+	      (loop (cdr ls) (cons (car ls) acc))))))
+      (loop (loop ls1 ()) ls2))))
+
+
+;; (let ((x 2) (y 3)) (+ x y)) =>
+;; ((lambda (x y) (+ x y)) 2 3)
+
+;; (let ((x 2) (y 3)) (+ x y)) => ((x 2) (y 3))
+(define bindings cadr)
+
+;; (let ((x 2) (y 3)) (+ x y)) => (+ x y)
+(define body caddr)
+
+;; (let ((x 2) (y 3)) (+ x y)) => (x y)
+(define vars
+  (lambda (expr)
+    (vars-helper (cadr expr))))
+
+;; ((x 2) (y 3)) => (x y)
+(define vars-helper
+  (lambda (bindings)
+    (if (null? bindings)
+	()
+	(cons (caar bindings)
+	      (vars-helper (cdr bindings))))))
+
+;; (let ((x 2) (y 3)) (+ x y)) => (2 3)
+(define vals
+  (lambda (expr)
+    (vals-helper (cadr expr))))
+
+;; ((x 2) (y 3)) => (2 3)
+(define vals-helper
+  (lambda (bindings)
+    (if (null? bindings)
+	()
+	(cons (cadar bindings)
+	      (vals-helper (cdr bindings))))))
+
+;; (let ((x 2) (y 3)) (+ x y)) => 
+;; ((lambda (x y) (+ x y)) 2 3)
+(define let->lambda
+  (lambda (expr)
+    (cons (list 'lambda (vars expr) (body expr))
+	  (vals expr))))
+
+;; (first-binding '(let* ((x 1) (y x)) (+ x y))) => (x 1)
+(define first-binding
+  (lambda (expr)
+    (car (bindings expr))))
+
+;; (rest-bindings '(let* ((x 1) (y x)) (+ x y))) => ((y x))
+(define rest-bindings
+  (lambda (expr)
+    (cdr (bindings expr))))
+
+;; (let*->let '(let* ((x 1) (y x)) (+ x y))) =>
+;; (let ((x 1)) (let* ((y x)) (+ x y))) =>
+;; (let ((x 1)) (let ((y x)) (let* () (+ x y)))) =>
+;; (let ((x 1)) (let ((y x)) (+ x y)))
+
+(define let*->let
+  (lambda (expr)
+    (if (null? (bindings expr))
+	(body expr)
+	(list 'let
+	      (list (first-binding expr))
+              (let*->let
+                (list 'let*
+                      (rest-bindings expr)
+                      (body expr)))))))
+
+;; (let*->lambda '(let* ((x 1) (y x)) (+ x y))) =>
+;; ((lambda (x) ((lambda (y) (+ x y)) x)) 1)
+(define let*->lambda
+  (lambda (expr)
+    (if (null? (bindings expr))
+	(body expr)
+	(let->lambda
+	 (list 'let
+	       (list (first-binding expr))
+	             (let*->lambda
+	               (list 'let*
+	                     (rest-bindings expr)
+	                     (body expr))))))))
+
+;; for experts...
+(define let->lambda
+  (lambda (expr)
+    `((lambda ,(vars expr) ,(body expr))
+      ,@(vals expr))))
+
+(define let*->let
+  (lambda (expr)
+    (if (null? (bindings expr))
+	(body expr)
+	`(let (,(first-binding expr))
+	   ,(let*->let
+	     `(let* ,(rest-bindings expr)
+		,(body expr)))))))
+
+;; (tel ((x 2)) (+ x x)) => 4
+(define-macro tel
+  (lambda (bindings body)
+    `((lambda ,(vars-helper bindings) ,body)
+      ,@(vals-helper bindings))))
+
+;; (tel* ((x 1) (y x)) (+ x x)) => 2
+(define-macro tel*
+  (lambda (bindings body)
+    (if (null? bindings)
+        body
+	`(tel (,(car bindings))
+	   ,(tel* ,(cdr bindings)
+	      ,body)))))

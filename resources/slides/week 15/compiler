@@ -1,0 +1,209 @@
+data Sexpr = Left' | Right' | Period | Symbol String | Number Integer | Boolean Bool | Nil | Cons {car :: Sexpr, cdr :: Sexpr} | Closure {args :: [Sexpr], body :: Bytecode, env :: Environment} | Unary {name :: String, func1 :: Sexpr -> Sexpr} | Binary {name :: String, func2 :: Sexpr -> Sexpr -> Sexpr} | Void | Error
+
+type Binding = (Sexpr, Sexpr)
+type Frame = [Binding]
+type Environment = [Frame]
+
+instance Eq Sexpr where
+    Left' == Left' = True
+    Right' == Right' = True
+    Period == Period = True
+    (Symbol x) == (Symbol y) = (x == y)
+    (Number x) == (Number y) = (x == y)
+    (Boolean x) == (Boolean y) = (x == y)
+    Nil == Nil = True
+    (Unary x f) == (Unary y g) = (x == y)
+    (Binary x f) == (Binary y g) = (x == y)
+    Void == Void = True
+    Error == Error = True
+    x == y = False
+
+instance Show Sexpr where
+    show (Left') = "Left"
+    show (Right') = "Right"
+    show (Period) = "Period"
+    show (Symbol x) = x
+    show (Number x) = (show x)
+    show (Boolean x) = if x == True then "#t" else "#f"
+    show (Nil) = "()"
+    show (Cons x y) = "(" ++ (show x) ++ (showCdr y) ++ ")"
+    show (Closure _ _ _) = "#"
+    show (Unary x _) = "#"
+    show (Binary x _) = "#"
+    show (Void) = "#"
+    show (Error) = "Error"
+
+showCdr :: Sexpr -> String
+showCdr (Nil) = ""
+showCdr (Cons x Nil) = " " ++ (show x)
+showCdr (Cons x v@(Cons y z)) = " " ++ (show x) ++ (showCdr v)
+showCdr (Cons x y) = " " ++ (show x) ++ " . " ++ (show y)
+showCdr x = " . " ++ (show x)
+
+data Bytecode = Halt | Refer {var :: Sexpr, next :: Bytecode} | Constant {val :: Sexpr, next :: Bytecode} | Close {args' :: [Sexpr], body' :: Bytecode, next :: Bytecode} | Test {conseq :: Bytecode, alt :: Bytecode} | Assign {var :: Sexpr, next :: Bytecode} | Frame {return :: Bytecode, next :: Bytecode} | Argument {next :: Bytecode} | Apply | Return deriving Eq
+
+instance Show Bytecode where
+    show (Halt) = "{halt}"
+    show (Refer var next) = "{refer " ++ (show var) ++ " " ++ (showNext next) ++ "}"
+    show (Constant val next) = "{constant " ++ (show val) ++ " " ++ (showNext next) ++ "}"
+    show (Close args' body' next) = "{close " ++ (show args') ++ " " ++ (show body') ++ " " ++ (showNext next) ++ "}"
+    show (Test conseq alt) = "{test " ++ (show conseq) ++ " " ++ (showNext alt) ++ "}"
+    show (Assign var next) = "{assign " ++ (show var) ++ " " ++ (showNext next) ++ "}"
+    show (Frame ret next) = "{frame " ++ (show ret) ++ " " ++ (showNext next) ++ "}"
+    show (Argument next) = "{argument " ++ (showNext next) ++ "}"
+    show (Apply) = "{apply}"
+    show (Return) = "{return}"
+
+showNext :: Bytecode -> String
+showNext (Halt) = "halt"
+showNext (Refer var next) = "refer " ++ (show var) ++ " " ++ (showNext next)
+showNext (Constant val next) = "constant " ++ (show val) ++ " " ++ (showNext next)
+showNext (Close args' body' next) = "close " ++ (show args') ++ " " ++ (show body') ++ " " ++ (showNext next)
+showNext (Test conseq alt) = "test " ++ (show conseq) ++ " " ++ (showNext alt)
+showNext (Assign var next) = "assign " ++ (show var) ++ " " ++ (showNext next)
+showNext (Frame ret next) = "frame " ++ (show ret) ++ " " ++ (showNext next)
+showNext (Argument next) = "argument " ++ (showNext next)
+showNext (Apply) = "apply"
+showNext (Return) = "return"
+
+misc :: Char -> Bool
+misc x = elem x "<>~!$%^&+-*/=_?"
+
+alphabetic :: Char -> Bool
+alphabetic x = elem x "abcdefghijklmnopqrstuvwxyz"
+
+numeric :: Char -> Bool
+numeric x = elem x "0123456789"
+
+legalFirst :: Char -> Bool
+legalFirst x = (misc x) || (alphabetic x)
+
+symbolic :: Char -> Bool
+symbolic x = (legalFirst x) || (numeric x)
+
+eat :: (Char -> Bool) -> String -> (String, String)
+eat pred str = loop str []
+    where loop [] acc = ([], reverse acc)
+          loop u@(x:xs) acc =
+              if not (pred x) then (u, reverse acc) else (loop xs (x:acc))
+
+eatNumber :: String -> (String, Sexpr)
+eatNumber str = let (rest, prefix) = (eat numeric) str
+                in (rest, Number (read prefix :: Integer))
+
+eatSymbol :: String -> (String, Sexpr)
+eatSymbol str = let (rest, prefix) = (eat symbolic) str
+                in (rest, Symbol prefix)
+
+scan :: String -> [Sexpr]
+scan [] = []
+scan (' ':xs) = scan xs
+scan ('(':xs) = Left':(scan xs)
+scan ('.':xs) = Period:(scan xs)
+scan (')':xs) = Right':(scan xs)
+scan u@(x:xs)
+     | (legalFirst x) = let (rest, token) = eatSymbol u in token:(scan rest)
+     | (numeric x) = let (rest, token) = eatNumber u in token:(scan rest)
+     | otherwise = [Error]
+
+push :: [Sexpr] -> Sexpr -> Integer -> (Sexpr, [Sexpr])
+push tokens acc d =
+    if (d == 0) && (acc /= Nil) then (acc, tokens) else helper tokens acc d
+       where helper (Left':xs) acc d = push xs (Cons Left' acc) (d+1)
+             helper u@((Symbol x):xs) acc d = push xs (Cons (Symbol x) acc) d
+             helper u@((Number x):xs) acc d = push xs (Cons (Number x) acc) d
+             helper (Period:xs) acc d = push xs (Cons Period acc) d
+             helper (Right':xs) acc d = push xs (pop acc Nil) (d-1)
+             helper _ _ _ = (Error, [Error])
+
+pop :: Sexpr -> Sexpr -> Sexpr
+pop (Cons Left' xs) v = Cons v xs
+pop (Cons Period xs) (Cons y Nil) = pop xs y
+pop (Cons x xs) v = pop xs (Cons x v)
+pop _ _ = Error
+
+parse :: String -> Sexpr
+parse str = car $ fst (push (scan str) Nil 0)
+
+assoc :: Sexpr -> Frame -> Sexpr
+assoc key [] = Error
+assoc key ((x,y):zs) = if x == key then y else assoc key zs
+
+lookUpLocal :: Sexpr -> Environment -> Sexpr
+lookUpLocal var [] = Error
+lookUpLocal var (frame:frames) =
+    if (ans == Error) then lookUpLocal var frames else ans
+        where ans = (assoc var frame)
+
+lookUp :: Sexpr -> Environment -> Frame -> Sexpr
+lookUp var local global =
+    if (ans == Error) then (assoc var global) else ans
+        where ans = (lookUpLocal var local)
+
+toList :: Sexpr -> [Sexpr]
+toList Nil = []
+toList (Cons x y) = x:(toList y)
+
+unary :: String -> (Sexpr -> Sexpr) -> Binding
+unary name func1 = ((Symbol name), (Unary name func1))
+
+binary :: String -> (Sexpr -> Sexpr -> Sexpr) -> Binding
+binary name func2 = ((Symbol name), (Binary name func2))
+
+arithmetic :: String -> (Integer -> Integer -> Integer) -> Binding
+arithmetic name op = binary name func2 where func2 (Number x) (Number y) = (Number (x `op` y))
+
+relational :: String -> (Integer -> Integer -> Bool) -> Binding
+relational name op = binary name func2
+    where func2 (Number x) (Number y) = (Boolean (x `op` y))
+
+notFalse :: Sexpr -> Bool
+notFalse (Boolean x) = not (x == False)
+
+compile :: Sexpr -> Bytecode -> Bytecode
+compile var@(Symbol name) next = (Refer var next)
+compile (Cons (Symbol "quote") (Cons sexpr Nil)) next = (Constant sexpr next)
+compile (Cons (Symbol "lambda") (Cons args (Cons body Nil))) next =
+    (Close (toList args) (compile body Return) next)
+compile (Cons (Symbol "define") (Cons var (Cons val Nil))) next =
+    (compile val (Assign var next))
+compile (Cons (Symbol "if") (Cons pred (Cons conseq (Cons alt Nil)))) next =
+    (compile pred (Test (compile conseq next) (compile alt next)))
+compile (Cons car cdr) return = (loop cdr (compile car Apply))
+    where loop Nil next = if return /= Return then (Frame return next) else next
+          loop (Cons arg args) next = loop args (compile arg (Argument next))
+compile sexpr next = (Constant sexpr next)
+
+vm :: Sexpr -> Bytecode -> Environment -> Frame -> [Sexpr] -> [(Bytecode, Environment, [Sexpr])] -> (Sexpr, Frame)
+vm acc (Halt) local global vals stk = (acc, global)
+vm acc (Refer var next) local global vals stk =
+    vm (lookUp var local global) next local global vals stk
+vm acc (Constant val next) local global vals stk =
+    vm val next local global vals stk
+vm acc (Close args' body' next) local global vals stk =
+    vm (Closure args' body' local) next local global vals stk
+vm acc (Test conseq alt) local global vals stk =
+    vm acc (if (notFalse acc) then conseq else alt) local global vals stk
+vm acc (Assign var next) local global vals stk =
+    vm Void next local ((var, acc):global) vals stk
+vm acc (Frame return next) local global vals stk =
+    vm acc next local global [] ((return, local, vals):stk)
+vm acc (Argument next) local global vals stk =
+    vm acc next local global (acc:vals) stk
+vm (Unary _ f) (Apply) _ global [x] ((return, local, vals):stk) =
+    vm (f x) return local global vals stk
+vm (Binary _ f) (Apply) _ global [x,y] ((return, local, vals):stk) =
+    vm (f x y) return local global vals stk
+vm acc@(Closure args body env) (Apply) local global vals stk =
+    vm acc body ((zip args vals):env) global [] stk
+vm acc (Return) _ global _ ((return, local, vals):stk) =
+    vm acc return local global vals stk
+
+global = [unary "car" car, unary "cdr" cdr, binary "cons" Cons, arithmetic "+" (+), arithmetic "*" (*), arithmetic "-" (-), relational "=" (==), relational "<" (<)]
+
+scheme global = do
+  putStr "> "
+  input <- getLine
+  let (result, global') = vm Nil (compile (parse input) (Halt)) [] global [] []
+  if result /= Void then putStrLn (show result) else scheme global'
+  scheme global'

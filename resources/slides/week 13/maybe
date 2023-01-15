@@ -1,0 +1,64 @@
+import Prelude hiding ((>>=))
+
+eToS = [("dog",  "perro"), ("cat",   "gato"), ("red",  "rioja"), ("word", "palabra"), ("good", "bueno"), ("head", "cabeza")]
+sToG = [("perro", "Hund"), ("gato",  "Katz"), ("rioja",  "rot"), ("palabra", "Wort"), ("bueno",  "gut"), ("cabeza", "Kopf")]
+gToF = [("Hund", "chien"), ("Katz",  "chat"), ("rot",  "rouge"), ("wort",     "mot"), ("gut",    "bon"), ("kopf",   "tete")]
+fToI = [("chien", "cane"), ("chat", "gotto"), ("rouge","rosso"), ("mot",   "parola"), ("bon",   "buon"), ("tete",  "testa")]
+
+--data Maybe a = Nothing | Just a
+
+findKey :: Eq a => a -> [(a,b)] -> Maybe b
+findKey key [] = Nothing
+findKey key ((x,y):xs) = if key == x then Just y else findKey key xs
+
+translate = flip findKey
+
+--flip f = \x y -> f y x
+
+englishToItalian word =
+  case translate eToS word of
+    Nothing -> Nothing
+    (Just palabra) -> case translate sToG palabra of
+      Nothing -> Nothing
+      (Just wort) -> case translate gToF wort of
+        Nothing -> Nothing
+        (Just mot) -> translate fToI mot
+
+-- bind
+(>>=) :: Maybe t -> (t -> Maybe a) -> Maybe a
+Nothing >>= f = Nothing
+(Just x) >>= f = f x
+
+englishToItalian' word = translate eToS word >>= translate sToG >>= translate gToF >>= translate fToI
+
+-- fish
+(>=>) :: (a -> Maybe b) -> (b -> Maybe c) -> (a -> Maybe c)
+f >=> g = (>>= g) . f
+
+englishToItalian'' = translate eToS >=> translate sToG >=> translate gToF >=> translate fToI
+
+car [] = Nothing
+car (x:xs) = Just x
+
+cdr [] = Nothing
+cdr (x:xs) = Just xs
+
+cadr x = case cdr x of
+  Nothing -> Nothing
+  (Just xs) -> car xs
+
+caddr x = case cdr x of
+  Nothing -> Nothing
+  (Just xs) -> case cdr xs of
+    Nothing -> Nothing
+    (Just ys) -> car ys
+
+cadddr x = case cdr x of
+  Nothing -> Nothing
+  (Just xs) -> case cdr xs of
+    Nothing -> Nothing
+    (Just ys) -> case cdr ys of
+      Nothing -> Nothing
+      (Just zs) -> car zs
+
+cadddr = cdr >=> cdr >=> cdr >=> car
