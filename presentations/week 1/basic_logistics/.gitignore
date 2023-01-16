@@ -1,5 +1,3 @@
-!.gitignore
-main*
+*
 !main.pdf
-*tex
-Makefile
+!.gitignore
