@@ -1,2 +1,2 @@
-main.*
-!main.tex
+!.gitignore
+!main.pdf
