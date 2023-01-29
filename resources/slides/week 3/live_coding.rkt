@@ -23,6 +23,7 @@
            (* (deep-times (car sexpr))
               (deep-times (cdr sexpr))))
           (else
+	   sexpr))))
 
 ;; (flatten '(1 (2 3) (4) 5)) => '(1 2 3 4 5)
 ;; (flatten '(1 ((((2 3)))) (4) 5)) => '(1 (((2 3))) 4 5)
