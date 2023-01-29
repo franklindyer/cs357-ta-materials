@@ -25,14 +25,14 @@
           (else
 	   sexpr))))
 
-;; (flatten '(1 (2 3) (4) 5)) => '(1 2 3 4 5)
-;; (flatten '(1 ((((2 3)))) (4) 5)) => '(1 (((2 3))) 4 5)
-(define flatten
+;; (flatten1 '(1 (2 3) (4) 5)) => '(1 2 3 4 5)
+;; (flatten1 '(1 ((((2 3)))) (4) 5)) => '(1 (((2 3))) 4 5)
+(define flatten1
   (lambda (ls)
     (if (null? ls)
         '()
         (append (wrap (car ls))
-                (flatten (cdr ls))))))
+                (flatten1 (cdr ls))))))
 
 ;; (flatten-all '(1 ((((2 3)))) (4) 5)) => '(1 2 3 4 5)
 (define flatten-all
