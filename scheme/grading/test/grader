@@ -1,0 +1,47 @@
+SANDBOX_GRADER="sandbox-grader.rkt"
+TEST_FILE=$1
+SUBMISSION=$2
+FEEDBACK_DIR=$3
+
+# $1: Test file
+# $2: Submission file
+single_file(){
+  [ ! -f "$SANDBOX_GRADER" ] && echo "Grader not available" && return;
+  echo "Grading submission: $2"
+  cp "$2" "copy-$2"
+  # Strip '#lang racket' line since evaluator doesnt like it
+  sed -i '/\#lang racket/d' "copy-$2"
+  racket "$SANDBOX_GRADER" "$1" "copy-$2" > feedback-$(basename "$2")
+  # Remove copy of submission file
+  rm -rf "copy-$2"
+}
+
+# $1: Test file
+# $2: Submission directory
+# $3: Feedback directory
+multiple_files(){
+  [ ! -f "sandbox-grader.rkt" ] && echo "Grader not available" && return;
+  for sub in "$2"/*.rkt; do
+    echo "Grading submission: $sub"
+    cp "$sub" "copy-$sub"
+    # Strip '#lang racket' line since evaluator doesnt like it
+    sed -i '/\#lang racket/d' "copy-$sub"
+    racket "$SANDBOX_GRADER" "$1" "copy-$sub" > "$3"/feedback-$(basename "$sub");
+    # Remove copy of submission file
+    rm -rf "copy-$sub"
+  done
+}
+
+if [ -z "$FEEDBACK_DIR" ]; then
+  FEEDBACK_DIR='feedback'
+fi;
+
+[ -z "$SUBMISSION" ] && echo "Missing submission info" && return;
+[ -z "$TEST_FILE" ] && echo "Missing test file info" && return;
+
+if [ -d "$SUBMISSION" ]; then
+  [ ! -d "$FEEDBACK_DIR" ] && mkdir "$FEEDBACK_DIR"
+  multiple_files "$TEST_FILE" "$SUBMISSION" "$FEEDBACK_DIR";
+else
+  single_file "$TEST_FILE" "$SUBMISSION";
+fi;
