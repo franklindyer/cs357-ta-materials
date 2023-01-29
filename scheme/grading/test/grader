@@ -3,18 +3,32 @@ TEST_FILE=$1
 SUBMISSION=$2
 FEEDBACK_DIR=$3
 
+# $1: Exit code
+# $2: Submission file
+process_syntax_errors_subs(){
+  if [ "$1" -eq "0" ]; then
+    echo "No syntax errors reported";
+  else
+    echo "Submission $2 has syntax errors";
+    [ ! -d subs_with_syntax_errors ] && mkdir subs_with_syntax_errors
+    cp "$2" subs_with_syntax_errors
+  fi
+}
+
 # $1: Test file
 # $2: Submission file
 single_file(){
   [ ! -f "$SANDBOX_GRADER" ] && echo "Grader not available" && return;
   echo "Grading submission: $2"
-  cp "$2" "copy-$2"
+  CLONED_FILE="$2-copy"
+  cp "$2" "$CLONED_FILE"
   # Strip '#lang racket' line since evaluator doesnt like it
-  #sed -i '/\#lang racket/d' "copy-$2"
-	perl -pe "s|\#lang racket||g" "copy-$2" > "copy-$2" 
-  racket "$SANDBOX_GRADER" "$1" "copy-$2" > feedback-$(basename "$2")
+  #sed -i '/\#lang racket/d' "$CLONED_FILE"
+	perl -n -i -e 'print unless m/lang racket/' "$CLONED_FILE"
+  racket "$SANDBOX_GRADER" "$1" "$CLONED_FILE" "feedback-$(basename "$2")"
+  process_syntax_errors_subs $? $2 
   # Remove copy of submission file
-  rm -rf "copy-$2"
+  rm -rf "$CLONED_FILE"
 }
 
 # $1: Test file
@@ -24,12 +38,15 @@ multiple_files(){
   [ ! -f "sandbox-grader.rkt" ] && echo "Grader not available" && return;
   for sub in "$2"/*.rkt; do
     echo "Grading submission: $sub"
-    cp "$sub" "copy-$sub"
+    CLONED_FILE="$sub-copy"
+    cp "$sub" "$CLONED_FILE"
     # Strip '#lang racket' line since evaluator doesnt like it
-    sed -i '/\#lang racket/d' "copy-$sub"
-    racket "$SANDBOX_GRADER" "$1" "copy-$sub" > "$3"/feedback-$(basename "$sub");
+    #sed -i '/\#lang racket/d' "$CLONED_FILE"
+    perl -n -i -e 'print unless m/lang racket/' "$CLONED_FILE"
+    racket "$SANDBOX_GRADER" "$1" "$CLONED_FILE" ""$3"/feedback-$(basename "$sub")";
+    process_syntax_errors_subs $? "$sub"
     # Remove copy of submission file
-    rm -rf "copy-$sub"
+    rm -rf "$CLONED_FILE"
   done
 }
 

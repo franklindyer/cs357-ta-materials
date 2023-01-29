@@ -29,9 +29,7 @@
       ;; TODO(?):
       ;; Add more cases regarding
       ;; state of ob if needed
-      ((void? ob) (begin
-                    (display "File contained errors\n")
-                    #t))
+      ((void? ob) #f)
       ((eof-object? ob) #t)
       (else (begin (ev ob) (hw-sandbox-port ev prt))))))
 
@@ -108,14 +106,17 @@
 ;; Return pts which is a number indicating
 ;; cumulative points obtained from testing
 ;; filename test-filename using evaluator ev
-;; Side effect: prints feedback
-(define (run-tests-from-file test-filename ev)
+;; Side effect: displays report on feedback-filename
+(define (run-tests-from-file test-filename feedback-filename ev)
    (let* (
       (prt (open-input-file test-filename))
+      (out (open-output-file feedback-filename #:exists 'replace))
       (results (run-tests-from-port prt ev 0 "BEGINNING OF TESTING\n---\n"))
    )
    (begin
-      (display (cdr results))
+      (display (cdr results) out)
+      (display (car results) out)
+      (close-output-port out)
       (car results)
    )
 ))
@@ -124,6 +125,12 @@
 (define hw-filename (vector-ref clargs 1))
 (define tc-filename (vector-ref clargs 0))
 (define hw-eval (new-hw-evaluator))
-(hw-sandbox-file hw-eval hw-filename)
+(define submission-without-syntax-errors (hw-sandbox-file hw-eval hw-filename))
+(define feedback-filename
+  (let ((basename (vector-ref clargs 2)))
+    (if submission-without-syntax-errors
+        basename
+        (string-append basename "-with-syntax-errors.rkt"))))
 
-(run-tests-from-file tc-filename hw-eval)
+(run-tests-from-file tc-filename feedback-filename hw-eval)
+(if submission-without-syntax-errors (exit 0) (exit 1))
