@@ -10,7 +10,8 @@ single_file(){
   echo "Grading submission: $2"
   cp "$2" "copy-$2"
   # Strip '#lang racket' line since evaluator doesnt like it
-  sed -i '/\#lang racket/d' "copy-$2"
+  #sed -i '/\#lang racket/d' "copy-$2"
+	perl -pe "s|\#lang racket||g" "copy-$2" > "copy-$2" 
   racket "$SANDBOX_GRADER" "$1" "copy-$2" > feedback-$(basename "$2")
   # Remove copy of submission file
   rm -rf "copy-$2"
