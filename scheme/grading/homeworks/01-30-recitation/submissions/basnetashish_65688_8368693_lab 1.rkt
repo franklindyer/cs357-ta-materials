@@ -1,0 +1,6 @@
+(define (contains lst1 lst2)
+  (cond ((null? lst2) #f)
+        ((member (car lst1)  lst2)
+         (contains  (cdr lst1)  lst2)
+         #t)
+        (else #f)))
