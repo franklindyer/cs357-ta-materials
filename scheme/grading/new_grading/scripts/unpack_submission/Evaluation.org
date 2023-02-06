@@ -1,0 +1,25 @@
+#+TITLE: Evaluation of Programming Assignment n
+#+AUTHOR: Jose Abel Castellanos Joo
+#+OPTIONS: num:nil
+#+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-readtheorg.setup
+
+* Grading Rubric:
+
+If any of your C programs do not compile with the \texttt{-ansi -pedantic -Wall}
+options without errors or warnings the points given for the assignment will be
+zero. Otherwise the following rubric will be used:
+
+** TODO + 7 pt:
+Your C programs start with a comment on top of the file with your name and description of the programs 
+** TODO + 10 pts:
+Your C programs follow the class coding standards
+** TODO + 10 pts:
+You have submitted the required files in a tar archive.
+** TODO + 27 pts:
+Your output file myshapes.out passes a diff test when compared with the output file shapes.out that was provided to you. 
+** TODO + 27 pts:
+Your output file mynewshapes.out passes a diff test when compared with an output file that only the grader has access to.
+** TODO + 19 pts:
+Your program newshapes.c produces the correct output when the grader changes the value of SHIFT to a different number where it is declared or defined.
+
+* TOTAL: (0/100)
