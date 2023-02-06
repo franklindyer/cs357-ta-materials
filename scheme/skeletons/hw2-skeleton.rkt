@@ -1,5 +1,9 @@
 #lang racket
 
+;; CS 357 Spring 2023, Homework 2
+;; Due Wed, Feb 15
+;; [INSERT YOUR NAME HERE]
+
 ;; Problem 4.4
 ;; (deepen-1 '(a b c d)) ==> '((a) (b) (c) (d))
 ;; (deepen-1 '()) ==> '()
