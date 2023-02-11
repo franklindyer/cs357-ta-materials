@@ -69,6 +69,6 @@
 ;; DO NOT use/define fact or expt!
 ;; (cos 0) ==> something that is approximately 1
 ;; (cos 1) ==> something that is approximately 0.5403
-;; (cos 1.57079) ==> something that is approximately 1
+;; (cos 1.57079) ==> something that is approximately 0
 (define cos 0)
 
