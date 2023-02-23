@@ -3,6 +3,8 @@
 ;; CS 357 Homework #3, Spring 2023
 ;; YOUR NAME HERE
 
+;; NOTE: Test cases not finished yet. Coming soon!
+
 ;; Exercise 7.2
 (define compose3 0)
 
