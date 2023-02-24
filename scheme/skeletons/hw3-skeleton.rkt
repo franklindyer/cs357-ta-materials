@@ -88,7 +88,7 @@
 
 ;; Problem 1
 ;; (equal? (iota 100) (reverse (reverse (iota 100)))) ==> #t
-;; (map iota '(0 1 2 3 4)) ==> '((0) (0 1) (0 1 2) (0 1 2 3) (0 1 2 3 4))
+;; (map iota '(1 2 3 4)) ==> '((1) (1 2) (1 2 3) (1 2 3 4))
 (define tail-recur 0)
 (define reverse 0)
 (define iota 0)
@@ -129,7 +129,7 @@ pattern)))
 
 ;; Problem 6
 ;; Only use apply, select, map, filter, outer-product and iota
-;; (apply avg-fact (apply shortest (map iota '(5 20 7 3 23 7 8)))) ==> 10/4
+;; (apply avg-fact (apply shortest (map iota '(5 20 7 3 23 7 8)))) ==> 3
 ;; (apply sum-of-squares (list-ref (map iota (iota 20)) 13)) ==> 819
 
 ;; (define length 0)
