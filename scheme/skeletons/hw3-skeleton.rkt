@@ -52,7 +52,7 @@
           (lambda (ls)
             (if (null? ls)
                 seed
-                (list-proc (car ls) (helper cdr ls))))))
+                (list-proc (car ls) (helper (cdr ls)))))))
       helper
     )
   )
