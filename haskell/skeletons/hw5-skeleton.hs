@@ -26,12 +26,12 @@ runLengthDecode _ = undefined
 
 -- Exercise 6
 -- splitText (/= ' ') "This is practice." => ["This","is","practice."]
-splitText :: [Char] -> (Char -> Bool) -> [[Char]]
+splitText :: (Char -> Bool) -> [Char] -> [[Char]]
 splitText _ _ = undefined
 
 -- Exercise 7
 -- encipher ['A' .. 'Z'] ['a' .. 'z'] "THIS" => "this"
-encipher :: Eq a => [a] -> [a] -> [a]
+encipher :: Eq a => [a] -> [a] -> [a] -> [a]
 encipher _ _ _ = undefined
 
 -- Exercise 8
