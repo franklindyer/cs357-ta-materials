@@ -85,4 +85,4 @@ deletions _ = undefined
 
 substitutions _ = undefined
 
-transportation _ = undefined
+transpositions _ = undefined
